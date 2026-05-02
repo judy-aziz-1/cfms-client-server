@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CFMS — تسجيل الدخول</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <!-- Animated Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="card">
+      <!-- Logo -->
+      <div class="logo">
+        <div class="logo-icon">📁</div>
+        <div class="logo-text">
+          <h1>CFMS</h1>
+          <p>Central File Management System</p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" onclick="switchTab('login')">
+          تسجيل الدخول
+        </button>
+        <button class="tab" role="tab" onclick="switchTab('register')">
+          حساب جديد
+        </button>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" id="alert" role="alert"></div>
+
+      <!-- ═══ Login Form ═══ -->
+      <form class="form active" id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">البريد الإلكتروني</label>
+          <div class="input-wrap">
+            <span class="icon">✉</span>
+            <input
+              type="email"
+              id="loginEmail"
+              placeholder="example@email.com"
+              autocomplete="email"
+            />
+          </div>
+          <span class="field-error" id="loginEmailErr"
+            >يرجى إدخال بريد إلكتروني صحيح</span
+          >
+        </div>
+
+        <div class="field">
+          <label for="loginPass">كلمة المرور</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input
+              type="password"
+              id="loginPass"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="toggle-pass"
+              onclick="togglePass('loginPass', this)"
+              aria-label="إظهار كلمة المرور"
+            >
+              👁
+            </button>
+          </div>
+          <span class="field-error" id="loginPassErr">كلمة المرور مطلوبة</span>
+        </div>
+
+        <a href="#" class="forgot">نسيت كلمة المرور؟</a>
+
+        <button type="submit" class="btn" id="loginBtn">
+          <span class="btn-text">دخول</span>
+          <span class="spinner"><div class="spinner-ring"></div></span>
+        </button>
+      </form>
+
+      <!-- ═══ Register Form ═══ -->
+      <form class="form" id="registerForm" novalidate>
+        <div class="field">
+          <label for="regName">الاسم الكامل</label>
+          <div class="input-wrap">
+            <span class="icon">👤</span>
+            <input
+              type="text"
+              id="regName"
+              placeholder="محمد أحمد"
+              autocomplete="name"
+            />
+          </div>
+          <span class="field-error" id="regNameErr">الاسم مطلوب</span>
+        </div>
+
+        <div class="field">
+          <label for="regEmail">البريد الإلكتروني</label>
+          <div class="input-wrap">
+            <span class="icon">✉</span>
+            <input
+              type="email"
+              id="regEmail"
+              placeholder="example@email.com"
+              autocomplete="email"
+            />
+          </div>
+          <span class="field-error" id="regEmailErr"
+            >يرجى إدخال بريد إلكتروني صحيح</span
+          >
+        </div>
+
+        <div class="field">
+          <label for="regPass">كلمة المرور</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input
+              type="password"
+              id="regPass"
+              placeholder="8 أحرف على الأقل"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="toggle-pass"
+              onclick="togglePass('regPass', this)"
+              aria-label="إظهار كلمة المرور"
+            >
+              👁
+            </button>
+          </div>
+          <span class="field-error" id="regPassErr"
+            >كلمة المرور يجب أن تكون 8 أحرف على الأقل</span
+          >
+        </div>
+
+        <div class="field">
+          <label for="regPassConfirm">تأكيد كلمة المرور</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input
+              type="password"
+              id="regPassConfirm"
+              placeholder="أعد إدخال كلمة المرور"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="toggle-pass"
+              onclick="togglePass('regPassConfirm', this)"
+              aria-label="إظهار كلمة المرور"
+            >
+              👁
+            </button>
+          </div>
+          <span class="field-error" id="regPassConfirmErr"
+            >كلمتا المرور غير متطابقتين</span
+          >
+        </div>
+
+        <button type="submit" class="btn" id="registerBtn">
+          <span class="btn-text">إنشاء حساب</span>
+          <span class="spinner"><div class="spinner-ring"></div></span>
+        </button>
+      </form>
+
+      <div class="card-footer">
+        نظام إدارة الملفات المركزي &nbsp;·&nbsp; <span>CFMS v1.0</span>
+      </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+  </body>
+</html>

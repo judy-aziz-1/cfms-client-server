@@ -1,0 +1,410 @@
+/* 
+  ═══════════════════════════════════════════════════
+  CFMS — Global Stylesheet
+  Central File Management System
+  ═══════════════════════════════════════════════════
+*/
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── CSS Variables (Design Tokens) ── */
+:root {
+  --bg:        #0b0f1a;
+  --panel:     #111827;
+  --border:    rgba(255, 255, 255, 0.07);
+  --accent:    #3b82f6;
+  --accent2:   #06b6d4;
+  --text:      #f1f5f9;
+  --muted:     #94a3b8;
+  --error:     #f87171;
+  --success:   #34d399;
+  --radius:    14px;
+  --shadow:    0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Base ── */
+body {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/*
+  ════════════════════════════════════════════════════
+  ANIMATED BACKGROUND
+  ════════════════════════════════════════════════════
+*/
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: drift 20s linear infinite;
+}
+
+@keyframes drift {
+  to { background-position: 48px 48px; }
+}
+
+.bg-glow {
+  position: fixed;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.18;
+}
+
+.bg-glow-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--accent);
+  top: -100px;
+  right: -100px;
+  animation: pulse 6s ease-in-out infinite alternate;
+}
+
+.bg-glow-2 {
+  width: 400px;
+  height: 400px;
+  background: var(--accent2);
+  bottom: -80px;
+  left: -80px;
+  animation: pulse 8s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes pulse {
+  from { opacity: 0.12; }
+  to   { opacity: 0.22; }
+}
+
+/*
+  ════════════════════════════════════════════════════
+  CARD
+  ════════════════════════════════════════════════════ 
+*/
+.card {
+  position: relative;
+  z-index: 1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 44px;
+  width: min(440px, 92vw);
+  box-shadow: var(--shadow);
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/*
+  ════════════════════════════════════════════════════
+  LOGO
+  ════════════════════════════════════════════════════ 
+*/
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.logo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
+}
+
+.logo-text h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.logo-text p {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* 
+  ════════════════════════════════════════════════════
+  TABS
+  ════════════════════════════════════════════════════ 
+*/
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 32px;
+  gap: 4px;
+}
+
+.tab {
+  padding: 9px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 7px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+}
+
+.tab:not(.active):hover {
+  color: var(--text);
+}
+
+/* 
+  ════════════════════════════════════════════════════
+  FORMS
+  ════════════════════════════════════════════════════ 
+*/
+.form {
+  display: none;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form.active {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Field ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* ── Input Wrapper ── */
+.input-wrap {
+  position: relative;
+}
+
+.input-wrap .icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.input-wrap input {
+  width: 100%;
+  padding: 12px 42px 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.input-wrap input::placeholder {
+  color: rgba(148, 163, 184, 0.4);
+}
+
+.input-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.input-wrap input.error-input {
+  border-color: var(--error);
+}
+
+/* ── Toggle Password Button ── */
+.toggle-pass {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+  transition: color 0.2s;
+}
+
+.toggle-pass:hover {
+  color: var(--text);
+}
+
+/* ── Field Error ── */
+.field-error {
+  font-size: 0.75rem;
+  color: var(--error);
+  display: none;
+}
+
+.field-error.show {
+  display: block;
+}
+
+/* ── Forgot Password ── */
+.forgot {
+  text-align: left;
+  margin-top: -6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot:hover {
+  color: var(--accent);
+}
+
+/*
+  ════════════════════════════════════════════════════
+  BUTTON
+  ════════════════════════════════════════════════════ 
+*/
+.btn {
+  padding: 13px;
+  border-radius: var(--radius);
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 4px;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35);
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(59, 130, 246, 0.45);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn .btn-text {
+  transition: opacity 0.2s;
+}
+
+.btn .spinner {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn.loading .btn-text { opacity: 0; }
+.btn.loading .spinner   { display: flex; }
+
+/* ── Spinner ── */
+.spinner-ring {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/*
+  ════════════════════════════════════════════════════
+  ALERT
+  ════════════════════════════════════════════════════ 
+*/
+.alert {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert.show    { display: flex; animation: fadeIn 0.3s ease; }
+.alert.success { background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.2); color: var(--success); }
+.alert.error   { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); color: var(--error); }
+
+/*
+  ════════════════════════════════════════════════════
+  CARD FOOTER
+  ════════════════════════════════════════════════════ 
+*/
+.card-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.card-footer span {
+  color: var(--text);
+  font-weight: 500;
+}
