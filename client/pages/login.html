@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CFMS — Login</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/login.css" />
+  </head>
+  <body>
+    <!-- Animated Background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="card">
+      <!-- Logo -->
+      <div class="logo">
+        <div class="logo-icon">📁</div>
+        <div class="logo-text">
+          <h1>CFMS</h1>
+          <p>Central File Management System</p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" onclick="switchTab('login')">
+          Login
+        </button>
+        <button class="tab" role="tab" onclick="switchTab('register')">
+          Register
+        </button>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" id="alert" role="alert"></div>
+
+      <!-- ═══ Login Form ═══ -->
+      <form class="form active" id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">Email Address</label>
+          <div class="input-wrap">
+            <span class="icon">✉</span>
+            <input
+              type="email"
+              id="loginEmail"
+              placeholder="example@email.com"
+              autocomplete="email"
+            />
+          </div>
+          <span class="field-error" id="loginEmailErr"
+            >Please enter a valid email address</span
+          >
+        </div>
+
+        <div class="field">
+          <label for="loginPass">Password</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input
+              type="password"
+              id="loginPass"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="toggle-pass"
+              onclick="togglePass('loginPass', this)"
+              aria-label="Show password"
+            >
+              👁
+            </button>
+          </div>
+          <span class="field-error" id="loginPassErr"
+            >Password is required</span
+          >
+        </div>
+
+        <a href="#" class="forgot">Forgot your password?</a>
+
+        <button type="submit" class="btn" id="loginBtn">
+          <span class="btn-text">Login</span>
+          <span class="spinner"><div class="spinner-ring"></div></span>
+        </button>
+      </form>
+
+      <!-- ═══ Register Form ═══ -->
+      <form class="form" id="registerForm" novalidate>
+        <div class="field">
+          <label for="regName">Full Name</label>
+          <div class="input-wrap">
+            <span class="icon">👤</span>
+            <input
+              type="text"
+              id="regName"
+              placeholder="John Doe"
+              autocomplete="name"
+            />
+          </div>
+          <span class="field-error" id="regNameErr">Full name is required</span>
+        </div>
+
+        <div class="field">
+          <label for="regEmail">Email Address</label>
+          <div class="input-wrap">
+            <span class="icon">✉</span>
+            <input
+              type="email"
+              id="regEmail"
+              placeholder="example@email.com"
+              autocomplete="email"
+            />
+          </div>
+          <span class="field-error" id="regEmailErr"
+            >Please enter a valid email address</span
+          >
+        </div>
+
+        <div class="field">
+          <label for="regPass">Password</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input
+              type="password"
+              id="regPass"
+              placeholder="At least 8 characters"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="toggle-pass"
+              onclick="togglePass('regPass', this)"
+              aria-label="Show password"
+            >
+              👁
+            </button>
+          </div>
+          <span class="field-error" id="regPassErr"
+            >Password must be at least 8 characters</span
+          >
+        </div>
+
+        <div class="field">
+          <label for="regPassConfirm">Confirm Password</label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input
+              type="password"
+              id="regPassConfirm"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="toggle-pass"
+              onclick="togglePass('regPassConfirm', this)"
+              aria-label="Show password"
+            >
+              👁
+            </button>
+          </div>
+          <span class="field-error" id="regPassConfirmErr"
+            >Passwords do not match</span
+          >
+        </div>
+
+        <button type="submit" class="btn" id="registerBtn">
+          <span class="btn-text">Create Account</span>
+          <span class="spinner"><div class="spinner-ring"></div></span>
+        </button>
+      </form>
+
+      <div class="card-footer">
+        Central File Management System &nbsp;·&nbsp; <span>CFMS v1.0</span>
+      </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+  </body>
+</html>
