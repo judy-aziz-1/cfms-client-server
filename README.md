@@ -173,7 +173,7 @@ Password: 12345678
 - [x] Project setup & repository structure
 - [x] Frontend login & register page
 - [x] Frontend dashboard page
-- [ ] Frontend admin panel
+- [x] Frontend admin panel
 - [ ] Authentication system (JWT + bcrypt)
 - [ ] File management API
 - [ ] Permissions & sharing system
