@@ -1,14 +1,15 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CFMS — تسجيل الدخول</title>
+    <title>CFMS — Login</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/login.css" />
   </head>
   <body>
     <!-- Animated Background -->
@@ -29,10 +30,10 @@
       <!-- Tabs -->
       <div class="tabs" role="tablist">
         <button class="tab active" role="tab" onclick="switchTab('login')">
-          تسجيل الدخول
+          Login
         </button>
         <button class="tab" role="tab" onclick="switchTab('register')">
-          حساب جديد
+          Register
         </button>
       </div>
 
@@ -42,7 +43,7 @@
       <!-- ═══ Login Form ═══ -->
       <form class="form active" id="loginForm" novalidate>
         <div class="field">
-          <label for="loginEmail">البريد الإلكتروني</label>
+          <label for="loginEmail">Email Address</label>
           <div class="input-wrap">
             <span class="icon">✉</span>
             <input
@@ -53,12 +54,12 @@
             />
           </div>
           <span class="field-error" id="loginEmailErr"
-            >يرجى إدخال بريد إلكتروني صحيح</span
+            >Please enter a valid email address</span
           >
         </div>
 
         <div class="field">
-          <label for="loginPass">كلمة المرور</label>
+          <label for="loginPass">Password</label>
           <div class="input-wrap">
             <span class="icon">🔒</span>
             <input
@@ -71,18 +72,20 @@
               type="button"
               class="toggle-pass"
               onclick="togglePass('loginPass', this)"
-              aria-label="إظهار كلمة المرور"
+              aria-label="Show password"
             >
               👁
             </button>
           </div>
-          <span class="field-error" id="loginPassErr">كلمة المرور مطلوبة</span>
+          <span class="field-error" id="loginPassErr"
+            >Password is required</span
+          >
         </div>
 
-        <a href="#" class="forgot">نسيت كلمة المرور؟</a>
+        <a href="#" class="forgot">Forgot your password?</a>
 
         <button type="submit" class="btn" id="loginBtn">
-          <span class="btn-text">دخول</span>
+          <span class="btn-text">Login</span>
           <span class="spinner"><div class="spinner-ring"></div></span>
         </button>
       </form>
@@ -90,21 +93,21 @@
       <!-- ═══ Register Form ═══ -->
       <form class="form" id="registerForm" novalidate>
         <div class="field">
-          <label for="regName">الاسم الكامل</label>
+          <label for="regName">Full Name</label>
           <div class="input-wrap">
             <span class="icon">👤</span>
             <input
               type="text"
               id="regName"
-              placeholder="محمد أحمد"
+              placeholder="John Doe"
               autocomplete="name"
             />
           </div>
-          <span class="field-error" id="regNameErr">الاسم مطلوب</span>
+          <span class="field-error" id="regNameErr">Full name is required</span>
         </div>
 
         <div class="field">
-          <label for="regEmail">البريد الإلكتروني</label>
+          <label for="regEmail">Email Address</label>
           <div class="input-wrap">
             <span class="icon">✉</span>
             <input
@@ -115,66 +118,66 @@
             />
           </div>
           <span class="field-error" id="regEmailErr"
-            >يرجى إدخال بريد إلكتروني صحيح</span
+            >Please enter a valid email address</span
           >
         </div>
 
         <div class="field">
-          <label for="regPass">كلمة المرور</label>
+          <label for="regPass">Password</label>
           <div class="input-wrap">
             <span class="icon">🔒</span>
             <input
               type="password"
               id="regPass"
-              placeholder="8 أحرف على الأقل"
+              placeholder="At least 8 characters"
               autocomplete="new-password"
             />
             <button
               type="button"
               class="toggle-pass"
               onclick="togglePass('regPass', this)"
-              aria-label="إظهار كلمة المرور"
+              aria-label="Show password"
             >
               👁
             </button>
           </div>
           <span class="field-error" id="regPassErr"
-            >كلمة المرور يجب أن تكون 8 أحرف على الأقل</span
+            >Password must be at least 8 characters</span
           >
         </div>
 
         <div class="field">
-          <label for="regPassConfirm">تأكيد كلمة المرور</label>
+          <label for="regPassConfirm">Confirm Password</label>
           <div class="input-wrap">
             <span class="icon">🔒</span>
             <input
               type="password"
               id="regPassConfirm"
-              placeholder="أعد إدخال كلمة المرور"
+              placeholder="Re-enter your password"
               autocomplete="new-password"
             />
             <button
               type="button"
               class="toggle-pass"
               onclick="togglePass('regPassConfirm', this)"
-              aria-label="إظهار كلمة المرور"
+              aria-label="Show password"
             >
               👁
             </button>
           </div>
           <span class="field-error" id="regPassConfirmErr"
-            >كلمتا المرور غير متطابقتين</span
+            >Passwords do not match</span
           >
         </div>
 
         <button type="submit" class="btn" id="registerBtn">
-          <span class="btn-text">إنشاء حساب</span>
+          <span class="btn-text">Create Account</span>
           <span class="spinner"><div class="spinner-ring"></div></span>
         </button>
       </form>
 
       <div class="card-footer">
-        نظام إدارة الملفات المركزي &nbsp;·&nbsp; <span>CFMS v1.0</span>
+        Central File Management System &nbsp;·&nbsp; <span>CFMS v1.0</span>
       </div>
     </div>
 
