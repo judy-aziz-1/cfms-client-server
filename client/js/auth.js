@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════
 //  CFMS — auth.js
-//  المسؤول عن: تسجيل الدخول، إنشاء الحساب، الجلسة
+//  Handles: Login, Registration, Session Management
 // ═══════════════════════════════════════════════════
 
-// ── إعدادات الـ API ──────────────────────────────────
-// عند جهوزية الـ Server من زميلك، غيّر هذا الرابط فقط
+// ── API Configuration ────────────────────────────────
+// When your teammate's server is ready, change this URL only
 const API_BASE = 'http://localhost:8000/api';
 
 
@@ -33,7 +33,7 @@ function togglePass(inputId, btn) {
   const input  = document.getElementById(inputId);
   const isPass = input.type === 'password';
 
-  input.type   = isPass ? 'text' : 'password';
+  input.type      = isPass ? 'text' : 'password';
   btn.textContent = isPass ? '🙈' : '👁';
 }
 
@@ -43,6 +43,7 @@ function togglePass(inputId, btn) {
 // ════════════════════════════════════════════════════
 function showAlert(message, type = 'error') {
   const el     = document.getElementById('alert');
+  if (!el) return;
   const prefix = type === 'error' ? '⚠ ' : '✓ ';
 
   el.textContent = prefix + message;
@@ -50,7 +51,8 @@ function showAlert(message, type = 'error') {
 }
 
 function hideAlert() {
-  document.getElementById('alert').className = 'alert';
+  const el = document.getElementById('alert');
+  if (el) el.className = 'alert';
 }
 
 
@@ -58,25 +60,25 @@ function hideAlert() {
 //  FORM VALIDATION
 // ════════════════════════════════════════════════════
 
-// إظهار أو إخفاء رسالة الخطأ لحقل معين
+// Show or hide the error message for a specific field
 function showFieldError(errorId, show) {
   const errorEl = document.getElementById(errorId);
   const inputId = errorId.replace('Err', '');
   const inputEl = document.getElementById(inputId);
 
-  errorEl.classList.toggle('show', show);
+  if (errorEl) errorEl.classList.toggle('show', show);
   if (inputEl) inputEl.classList.toggle('error-input', show);
 
-  return show; // نُرجع القيمة لاستخدامها في التحقق
+  return show;
 }
 
-// مسح جميع رسائل الخطأ
+// Clear all error messages
 function clearErrors() {
   document.querySelectorAll('.field-error').forEach(el => el.classList.remove('show'));
   document.querySelectorAll('input').forEach(el => el.classList.remove('error-input'));
 }
 
-// التحقق من صحة البريد الإلكتروني
+// Validate email format
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -86,7 +88,8 @@ function isValidEmail(email) {
 //  LOADING STATE
 // ════════════════════════════════════════════════════
 function setLoading(buttonId, isLoading) {
-  const btn    = document.getElementById(buttonId);
+  const btn = document.getElementById(buttonId);
+  if (!btn) return;
   btn.disabled = isLoading;
   btn.classList.toggle('loading', isLoading);
 }
@@ -96,158 +99,183 @@ function setLoading(buttonId, isLoading) {
 //  SESSION MANAGEMENT
 // ════════════════════════════════════════════════════
 
-// حفظ بيانات المستخدم بعد تسجيل الدخول
+// Save user data after successful login
 function saveSession(token, user) {
   localStorage.setItem('cfms_token', token);
   localStorage.setItem('cfms_user',  JSON.stringify(user));
 }
 
-// التحقق هل المستخدم مسجل دخول
+// Check if the user is already logged in
 function isLoggedIn() {
   return !!localStorage.getItem('cfms_token');
 }
 
-// الحصول على الـ Token للإرسال مع الطلبات
+// Get the token to send with API requests
 function getToken() {
   return localStorage.getItem('cfms_token');
 }
 
-// تسجيل الخروج
+// Get the stored user object
+function getUser() {
+  const user = localStorage.getItem('cfms_user');
+  return user ? JSON.parse(user) : null;
+}
+
+// Logout — clear session and redirect to login
 function logout() {
   localStorage.removeItem('cfms_token');
   localStorage.removeItem('cfms_user');
   window.location.href = 'login.html';
 }
 
-// إذا كان المستخدم مسجلاً، اذهب مباشرة للـ Dashboard
-if (isLoggedIn()) {
-  window.location.href = 'dashboard.html';
+// ── Page-specific redirect logic ──────────────────────
+// Runs ONLY on login page: if already logged in → go to dashboard
+// Runs ONLY on dashboard page: if NOT logged in → go to login
+const currentPage = window.location.pathname;
+
+if (currentPage.includes('dashboard.html')) {
+  // We are on the dashboard — if no token, send to login
+  if (!isLoggedIn()) {
+    window.location.href = 'login.html';
+  }
+} else if (currentPage.includes('login.html') || currentPage.endsWith('/pages/') || currentPage.endsWith('/')) {
+  // We are on the login page — if already logged in, go to dashboard
+  if (isLoggedIn()) {
+    window.location.href = 'dashboard.html';
+  }
 }
 
 
 // ════════════════════════════════════════════════════
-//  LOGIN
+//  LOGIN — only runs if login form exists on this page
 // ════════════════════════════════════════════════════
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearErrors();
-  hideAlert();
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+    hideAlert();
 
-  // 1. جمع بيانات النموذج
-  const email    = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPass').value;
+    // 1. Collect form data
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPass').value;
 
-  // 2. التحقق من البيانات
-  let isValid = true;
-  if (!isValidEmail(email)) isValid = !showFieldError('loginEmailErr', true);
-  if (!password)            isValid = !showFieldError('loginPassErr', true);
-  if (!isValid) return;
+    // 2. Validate inputs
+    let isValid = true;
+    if (!isValidEmail(email)) isValid = !showFieldError('loginEmailErr', true);
+    if (!password)            isValid = !showFieldError('loginPassErr', true);
+    if (!isValid) return;
 
-  // 3. بدء حالة التحميل
-  setLoading('loginBtn', true);
+    // 3. Start loading state
+    setLoading('loginBtn', true);
 
-  try {
+    try {
 
-    // ════════════════════════════════════════════════
-    // الكود الحقيقي — فعّله عند جهوزية الـ API
-    // ════════════════════════════════════════════════
-    /*
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email, password })
-    });
+      // ════════════════════════════════════════════════
+      // Real API code — uncomment when backend is ready
+      // ════════════════════════════════════════════════
+      /*
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password })
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'خطأ في تسجيل الدخول');
+      if (!response.ok) {
+        throw new Error(data.detail || 'Login failed. Please try again.');
+      }
+
+      saveSession(data.access_token, data.user);
+      window.location.href = 'dashboard.html';
+      */
+
+      // ════════════════════════════════════════════════
+      // Temporary mock — remove when API is connected
+      // ════════════════════════════════════════════════
+      await new Promise(resolve => setTimeout(resolve, 1400));
+
+      if (email === 'admin@cfms.com' && password === '12345678') {
+        saveSession('mock-token-123', { name: 'Admin User', email });
+        showAlert('Login successful! Redirecting...', 'success');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+      } else {
+        throw new Error('Invalid email or password. Please try again.');
+      }
+
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      // 4. Always stop loading state
+      setLoading('loginBtn', false);
     }
-
-    saveSession(data.access_token, data.user);
-    window.location.href = 'dashboard.html';
-    */
-
-    // ════════════════════════════════════════════════
-    // محاكاة مؤقتة — احذفها عند ربط الـ API
-    // ════════════════════════════════════════════════
-    await new Promise(resolve => setTimeout(resolve, 1400));
-
-    if (email === 'admin@cfms.com' && password === '12345678') {
-      showAlert('تم تسجيل الدخول بنجاح! جاري التحويل...', 'success');
-      // window.location.href = 'dashboard.html';
-    } else {
-      throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
-    }
-
-  } catch (error) {
-    showAlert(error.message);
-  } finally {
-    // 4. إيقاف حالة التحميل دائماً
-    setLoading('loginBtn', false);
-  }
-});
+  });
+}
 
 
 // ════════════════════════════════════════════════════
-//  REGISTER
+//  REGISTER — only runs if register form exists on this page
 // ════════════════════════════════════════════════════
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clearErrors();
-  hideAlert();
+const registerForm = document.getElementById('registerForm');
+if (registerForm) {
+  registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+    hideAlert();
 
-  // 1. جمع بيانات النموذج
-  const name            = document.getElementById('regName').value.trim();
-  const email           = document.getElementById('regEmail').value.trim();
-  const password        = document.getElementById('regPass').value;
-  const passwordConfirm = document.getElementById('regPassConfirm').value;
+    // 1. Collect form data
+    const name            = document.getElementById('regName').value.trim();
+    const email           = document.getElementById('regEmail').value.trim();
+    const password        = document.getElementById('regPass').value;
+    const passwordConfirm = document.getElementById('regPassConfirm').value;
 
-  // 2. التحقق من البيانات
-  let isValid = true;
-  if (!name)                    isValid = !showFieldError('regNameErr', true);
-  if (!isValidEmail(email))     isValid = !showFieldError('regEmailErr', true);
-  if (password.length < 8)      isValid = !showFieldError('regPassErr', true);
-  if (password !== passwordConfirm) isValid = !showFieldError('regPassConfirmErr', true);
-  if (!isValid) return;
+    // 2. Validate inputs
+    let isValid = true;
+    if (!name)                        isValid = !showFieldError('regNameErr', true);
+    if (!isValidEmail(email))         isValid = !showFieldError('regEmailErr', true);
+    if (password.length < 8)          isValid = !showFieldError('regPassErr', true);
+    if (password !== passwordConfirm) isValid = !showFieldError('regPassConfirmErr', true);
+    if (!isValid) return;
 
-  // 3. بدء حالة التحميل
-  setLoading('registerBtn', true);
+    // 3. Start loading state
+    setLoading('registerBtn', true);
 
-  try {
+    try {
 
-    // ════════════════════════════════════════════════
-    // الكود الحقيقي — فعّله عند جهوزية الـ API
-    // ════════════════════════════════════════════════
-    /*
-    const response = await fetch(`${API_BASE}/auth/register`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ name, email, password })
-    });
+      // ════════════════════════════════════════════════
+      // Real API code — uncomment when backend is ready
+      // ════════════════════════════════════════════════
+      /*
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, email, password })
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'خطأ في إنشاء الحساب');
+      if (!response.ok) {
+        throw new Error(data.detail || 'Registration failed. Please try again.');
+      }
+
+      showAlert('Account created successfully! You can now log in.', 'success');
+      setTimeout(() => switchTab('login'), 1500);
+      */
+
+      // ════════════════════════════════════════════════
+      // Temporary mock — remove when API is connected
+      // ════════════════════════════════════════════════
+      await new Promise(resolve => setTimeout(resolve, 1400));
+
+      showAlert('Account created successfully! You can now log in.', 'success');
+      setTimeout(() => switchTab('login'), 1500);
+
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      // 4. Always stop loading state
+      setLoading('registerBtn', false);
     }
-
-    showAlert('تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.', 'success');
-    setTimeout(() => switchTab('login'), 1500);
-    */
-
-    // ════════════════════════════════════════════════
-    // محاكاة مؤقتة — احذفها عند ربط الـ API
-    // ════════════════════════════════════════════════
-    await new Promise(resolve => setTimeout(resolve, 1400));
-
-    showAlert('تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.', 'success');
-    setTimeout(() => switchTab('login'), 1500);
-
-  } catch (error) {
-    showAlert(error.message);
-  } finally {
-    // 4. إيقاف حالة التحميل دائماً
-    setLoading('registerBtn', false);
-  }
-});
+  });
+}

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CFMS — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/dashboard.css" />
+  </head>
+  <body>
+    <!-- ══════════════════════════════════ SIDEBAR ══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">📁</span>
+          <span class="logo-text">CFMS</span>
+        </div>
+        <button
+          class="sidebar-close"
+          id="sidebarClose"
+          aria-label="Close sidebar"
+        >
+          ✕
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="my-files">
+          <span class="nav-icon">🗂</span>
+          <span class="nav-label">My Files</span>
+        </a>
+        <a href="#" class="nav-item" data-section="shared">
+          <span class="nav-icon">🔗</span>
+          <span class="nav-label">Shared with Me</span>
+        </a>
+        <a href="#" class="nav-item" data-section="recent">
+          <span class="nav-icon">🕐</span>
+          <span class="nav-label">Recent</span>
+        </a>
+        <a href="#" class="nav-item" data-section="starred">
+          <span class="nav-icon">★</span>
+          <span class="nav-label">Starred</span>
+        </a>
+        <a href="#" class="nav-item" data-section="trash">
+          <span class="nav-icon">🗑</span>
+          <span class="nav-label">Trash</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="storage-block">
+          <div class="storage-label">
+            <span>Storage</span>
+            <span class="storage-amount" id="storageText">0 B / 10 GB</span>
+          </div>
+          <div class="storage-bar">
+            <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="user-block" id="userBlock">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">Admin User</div>
+            <div class="user-email" id="sidebarUserEmail">admin@cfms.com</div>
+          </div>
+          <button class="logout-btn" id="logoutBtn" title="Logout">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══════════════════════════════════ MAIN ══ -->
+    <div class="main-wrapper">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button
+            class="menu-toggle"
+            id="menuToggle"
+            aria-label="Toggle sidebar"
+          >
+            ☰
+          </button>
+          <div class="breadcrumb" id="breadcrumb">
+            <span>My Files</span>
+          </div>
+        </div>
+        <div class="topbar-center">
+          <div class="search-box">
+            <span class="search-icon">⌕</span>
+            <input
+              type="text"
+              class="search-input"
+              id="searchInput"
+              placeholder="Search files and folders..."
+            />
+            <kbd class="search-kbd">Ctrl+K</kbd>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="view-toggle">
+            <button class="view-btn active" id="gridViewBtn" title="Grid view">
+              ⊞
+            </button>
+            <button class="view-btn" id="listViewBtn" title="List view">
+              ≡
+            </button>
+          </div>
+          <button class="upload-btn" id="uploadBtn">↑ Upload</button>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="content">
+        <!-- STATS -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon stat-blue">📄</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statFiles">0</div>
+              <div class="stat-label">Total Files</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-green">🔗</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statShared">0</div>
+              <div class="stat-label">Shared</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-orange">💾</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statStorage">0 MB</div>
+              <div class="stat-label">Used Storage</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-purple">🕐</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statRecent">0</div>
+              <div class="stat-label">Recent (7d)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILES SECTION -->
+        <section class="files-section">
+          <div class="section-header">
+            <h2 class="section-title" id="sectionTitle">My Files</h2>
+            <div class="section-actions">
+              <button class="action-btn" id="newFolderBtn">+ New Folder</button>
+              <select class="sort-select" id="sortSelect">
+                <option value="name">Sort: Name</option>
+                <option value="date">Sort: Date</option>
+                <option value="size">Sort: Size</option>
+                <option value="type">Sort: Type</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div class="empty-state" id="emptyState" style="display: none">
+            <div class="empty-icon">📂</div>
+            <div class="empty-title">No files here yet</div>
+            <div class="empty-sub">Upload your first file to get started</div>
+            <button
+              class="upload-btn"
+              onclick="document.getElementById('uploadBtn').click()"
+            >
+              ↑ Upload File
+            </button>
+          </div>
+
+          <!-- File grid -->
+          <div class="file-grid" id="fileGrid"></div>
+
+          <!-- File list -->
+          <div class="file-list" id="fileList" style="display: none">
+            <div class="list-header">
+              <span class="list-col-name">Name</span>
+              <span class="list-col-size">Size</span>
+              <span class="list-col-date">Modified</span>
+              <span class="list-col-actions"></span>
+            </div>
+            <div id="fileListBody"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ══════════════════════════════════ UPLOAD MODAL ══ -->
+    <div class="modal-overlay" id="uploadModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title">Upload Files</h3>
+          <button class="modal-close" id="uploadModalClose">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">☁</div>
+            <div class="drop-title">Drag & drop files here</div>
+            <div class="drop-sub">or click to browse</div>
+            <input type="file" id="fileInput" multiple hidden />
+          </div>
+          <div class="upload-queue" id="uploadQueue"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="uploadCancelBtn">Cancel</button>
+          <button class="btn-primary" id="uploadConfirmBtn">Upload All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ FILE OPTIONS MODAL ══ -->
+    <div class="modal-overlay" id="fileModal">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h3 class="modal-title" id="fileModalTitle">File Options</h3>
+          <button class="modal-close" id="fileModalClose">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="file-actions-list">
+            <button class="file-action-item" id="actionDownload">
+              <span class="fa-icon">↓</span> Download
+            </button>
+            <button class="file-action-item" id="actionShare">
+              <span class="fa-icon">🔗</span> Share
+            </button>
+            <button class="file-action-item" id="actionRename">
+              <span class="fa-icon">✎</span> Rename
+            </button>
+            <button
+              class="file-action-item file-action-danger"
+              id="actionDelete"
+            >
+              <span class="fa-icon">🗑</span> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ NEW FOLDER MODAL ══ -->
+    <div class="modal-overlay" id="folderModal">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h3 class="modal-title">New Folder</h3>
+          <button class="modal-close" id="folderModalClose">✕</button>
+        </div>
+        <div class="modal-body">
+          <label class="input-label">Folder Name</label>
+          <input
+            type="text"
+            class="modal-input"
+            id="folderNameInput"
+            placeholder="e.g. Project Documents"
+          />
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="folderCancelBtn">Cancel</button>
+          <button class="btn-primary" id="folderCreateBtn">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts: auth.js MUST come first -->
+    <script src="../js/auth.js"></script>
+    <script src="../js/dashboard.js"></script>
+  </body>
+</html>
