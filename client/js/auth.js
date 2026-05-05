@@ -3,28 +3,65 @@
 //  Handles: Login, Registration, Session Management
 // ═══════════════════════════════════════════════════
 
-// ── API Configuration ────────────────────────────────
-// When your teammate's server is ready, change this URL only
 const API_BASE = 'http://localhost:8000/api';
 
+// ════════════════════════════════════════════════════
+//  SESSION MANAGEMENT
+// ════════════════════════════════════════════════════
+function saveSession(token, user) {
+  localStorage.setItem('cfms_token', token);
+  localStorage.setItem('cfms_user',  JSON.stringify(user));
+}
+
+function isLoggedIn() {
+  return !!localStorage.getItem('cfms_token');
+}
+
+function getToken() {
+  return localStorage.getItem('cfms_token');
+}
+
+function getUser() {
+  const user = localStorage.getItem('cfms_user');
+  return user ? JSON.parse(user) : null;
+}
+
+function logout() {
+  localStorage.removeItem('cfms_token');
+  localStorage.removeItem('cfms_user');
+  window.location.replace('login.html');
+}
+
+// ── Auth Guard (runs immediately on every page) ───────
+(function authGuard() {
+  const path        = window.location.pathname;
+  const isProtected = path.includes('dashboard.html') || path.includes('admin.html');
+  const isLoginPage = path.includes('login.html') || path.endsWith('/pages/') || path.endsWith('/');
+
+  if (isProtected && !isLoggedIn()) {
+    window.location.replace('login.html');
+  } else if (isLoginPage && isLoggedIn()) {
+    window.location.replace('dashboard.html');
+  }
+})();
 
 // ════════════════════════════════════════════════════
-//  TAB SWITCHING
+//  TAB SWITCHING — login page only
 // ════════════════════════════════════════════════════
 function switchTab(tab) {
+  const loginForm    = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  if (!loginForm || !registerForm) return; // guard: only runs on login page
+
   const isLogin = tab === 'login';
   const tabs    = document.querySelectorAll('.tab');
-
   tabs[0].classList.toggle('active', isLogin);
   tabs[1].classList.toggle('active', !isLogin);
-
-  document.getElementById('loginForm').classList.toggle('active', isLogin);
-  document.getElementById('registerForm').classList.toggle('active', !isLogin);
-
+  loginForm.classList.toggle('active', isLogin);
+  registerForm.classList.toggle('active', !isLogin);
   hideAlert();
   clearErrors();
 }
-
 
 // ════════════════════════════════════════════════════
 //  PASSWORD VISIBILITY
@@ -32,21 +69,17 @@ function switchTab(tab) {
 function togglePass(inputId, btn) {
   const input  = document.getElementById(inputId);
   const isPass = input.type === 'password';
-
   input.type      = isPass ? 'text' : 'password';
   btn.textContent = isPass ? '🙈' : '👁';
 }
 
-
 // ════════════════════════════════════════════════════
-//  ALERT MESSAGES
+//  ALERTS & VALIDATION
 // ════════════════════════════════════════════════════
 function showAlert(message, type = 'error') {
-  const el     = document.getElementById('alert');
+  const el = document.getElementById('alert');
   if (!el) return;
-  const prefix = type === 'error' ? '⚠ ' : '✓ ';
-
-  el.textContent = prefix + message;
+  el.textContent = (type === 'error' ? '⚠ ' : '✓ ') + message;
   el.className   = `alert ${type} show`;
 }
 
@@ -55,34 +88,22 @@ function hideAlert() {
   if (el) el.className = 'alert';
 }
 
-
-// ════════════════════════════════════════════════════
-//  FORM VALIDATION
-// ════════════════════════════════════════════════════
-
-// Show or hide the error message for a specific field
 function showFieldError(errorId, show) {
   const errorEl = document.getElementById(errorId);
-  const inputId = errorId.replace('Err', '');
-  const inputEl = document.getElementById(inputId);
-
+  const inputEl = document.getElementById(errorId.replace('Err', ''));
   if (errorEl) errorEl.classList.toggle('show', show);
   if (inputEl) inputEl.classList.toggle('error-input', show);
-
   return show;
 }
 
-// Clear all error messages
 function clearErrors() {
   document.querySelectorAll('.field-error').forEach(el => el.classList.remove('show'));
   document.querySelectorAll('input').forEach(el => el.classList.remove('error-input'));
 }
 
-// Validate email format
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-
 
 // ════════════════════════════════════════════════════
 //  LOADING STATE
@@ -94,60 +115,8 @@ function setLoading(buttonId, isLoading) {
   btn.classList.toggle('loading', isLoading);
 }
 
-
 // ════════════════════════════════════════════════════
-//  SESSION MANAGEMENT
-// ════════════════════════════════════════════════════
-
-// Save user data after successful login
-function saveSession(token, user) {
-  localStorage.setItem('cfms_token', token);
-  localStorage.setItem('cfms_user',  JSON.stringify(user));
-}
-
-// Check if the user is already logged in
-function isLoggedIn() {
-  return !!localStorage.getItem('cfms_token');
-}
-
-// Get the token to send with API requests
-function getToken() {
-  return localStorage.getItem('cfms_token');
-}
-
-// Get the stored user object
-function getUser() {
-  const user = localStorage.getItem('cfms_user');
-  return user ? JSON.parse(user) : null;
-}
-
-// Logout — clear session and redirect to login
-function logout() {
-  localStorage.removeItem('cfms_token');
-  localStorage.removeItem('cfms_user');
-  window.location.href = 'login.html';
-}
-
-// ── Page-specific redirect logic ──────────────────────
-// Runs ONLY on login page: if already logged in → go to dashboard
-// Runs ONLY on dashboard page: if NOT logged in → go to login
-const currentPage = window.location.pathname;
-
-if (currentPage.includes('dashboard.html')) {
-  // We are on the dashboard — if no token, send to login
-  if (!isLoggedIn()) {
-    window.location.href = 'login.html';
-  }
-} else if (currentPage.includes('login.html') || currentPage.endsWith('/pages/') || currentPage.endsWith('/')) {
-  // We are on the login page — if already logged in, go to dashboard
-  if (isLoggedIn()) {
-    window.location.href = 'dashboard.html';
-  }
-}
-
-
-// ════════════════════════════════════════════════════
-//  LOGIN — only runs if login form exists on this page
+//  LOGIN — only runs if login form exists
 // ════════════════════════════════════════════════════
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
@@ -156,50 +125,36 @@ if (loginForm) {
     clearErrors();
     hideAlert();
 
-    // 1. Collect form data
     const email    = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPass').value;
 
-    // 2. Validate inputs
     let isValid = true;
     if (!isValidEmail(email)) isValid = !showFieldError('loginEmailErr', true);
     if (!password)            isValid = !showFieldError('loginPassErr', true);
     if (!isValid) return;
 
-    // 3. Start loading state
     setLoading('loginBtn', true);
 
     try {
-
-      // ════════════════════════════════════════════════
-      // Real API code — uncomment when backend is ready
-      // ════════════════════════════════════════════════
+      // ── REAL API (uncomment when backend is ready) ──────
       /*
       const response = await fetch(`${API_BASE}/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email, password })
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Login failed. Please try again.');
-      }
-
+      if (!response.ok) throw new Error(data.detail || 'Login failed.');
       saveSession(data.access_token, data.user);
-      window.location.href = 'dashboard.html';
+      window.location.replace('dashboard.html');
       */
 
-      // ════════════════════════════════════════════════
-      // Temporary mock — remove when API is connected
-      // ════════════════════════════════════════════════
+      // ── MOCK ────────────────────────────────────────────
       await new Promise(resolve => setTimeout(resolve, 1400));
-
       if (email === 'admin@cfms.com' && password === '12345678') {
-        saveSession('mock-token-123', { name: 'Admin User', email });
+        saveSession('mock-token-123', { name: 'Admin User', email, role: 'admin' });
         showAlert('Login successful! Redirecting...', 'success');
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+        setTimeout(() => window.location.replace('dashboard.html'), 1000);
       } else {
         throw new Error('Invalid email or password. Please try again.');
       }
@@ -207,15 +162,13 @@ if (loginForm) {
     } catch (error) {
       showAlert(error.message);
     } finally {
-      // 4. Always stop loading state
       setLoading('loginBtn', false);
     }
   });
 }
 
-
 // ════════════════════════════════════════════════════
-//  REGISTER — only runs if register form exists on this page
+//  REGISTER — only runs if register form exists
 // ════════════════════════════════════════════════════
 const registerForm = document.getElementById('registerForm');
 if (registerForm) {
@@ -224,13 +177,11 @@ if (registerForm) {
     clearErrors();
     hideAlert();
 
-    // 1. Collect form data
     const name            = document.getElementById('regName').value.trim();
     const email           = document.getElementById('regEmail').value.trim();
     const password        = document.getElementById('regPass').value;
     const passwordConfirm = document.getElementById('regPassConfirm').value;
 
-    // 2. Validate inputs
     let isValid = true;
     if (!name)                        isValid = !showFieldError('regNameErr', true);
     if (!isValidEmail(email))         isValid = !showFieldError('regEmailErr', true);
@@ -238,43 +189,30 @@ if (registerForm) {
     if (password !== passwordConfirm) isValid = !showFieldError('regPassConfirmErr', true);
     if (!isValid) return;
 
-    // 3. Start loading state
     setLoading('registerBtn', true);
 
     try {
-
-      // ════════════════════════════════════════════════
-      // Real API code — uncomment when backend is ready
-      // ════════════════════════════════════════════════
+      // ── REAL API (uncomment when backend is ready) ──────
       /*
       const response = await fetch(`${API_BASE}/auth/register`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ name, email, password })
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Registration failed. Please try again.');
-      }
-
-      showAlert('Account created successfully! You can now log in.', 'success');
+      if (!response.ok) throw new Error(data.detail || 'Registration failed.');
+      showAlert('Account created! You can now log in.', 'success');
       setTimeout(() => switchTab('login'), 1500);
       */
 
-      // ════════════════════════════════════════════════
-      // Temporary mock — remove when API is connected
-      // ════════════════════════════════════════════════
+      // ── MOCK ────────────────────────────────────────────
       await new Promise(resolve => setTimeout(resolve, 1400));
-
       showAlert('Account created successfully! You can now log in.', 'success');
       setTimeout(() => switchTab('login'), 1500);
 
     } catch (error) {
       showAlert(error.message);
     } finally {
-      // 4. Always stop loading state
       setLoading('registerBtn', false);
     }
   });
