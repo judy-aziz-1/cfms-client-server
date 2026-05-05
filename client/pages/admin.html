@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CFMS — Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
+  </head>
+  <body>
+    <!-- ══════════════════════════════════ SIDEBAR ══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">📁</span>
+          <span class="logo-text">CFMS</span>
+        </div>
+        <button class="sidebar-close" id="sidebarClose">✕</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="overview">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Overview</span>
+        </a>
+        <a href="#" class="nav-item" data-section="users">
+          <span class="nav-icon">👥</span>
+          <span class="nav-label">Users</span>
+        </a>
+        <a href="#" class="nav-item" data-section="files">
+          <span class="nav-icon">🗂</span>
+          <span class="nav-label">All Files</span>
+        </a>
+        <a href="#" class="nav-item" data-section="activity">
+          <span class="nav-icon">🕐</span>
+          <span class="nav-label">Activity Log</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="dashboard.html" class="back-btn"> ← Back to Dashboard </a>
+        <div class="user-block">
+          <div class="user-avatar" id="adminAvatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="adminName">Admin User</div>
+            <div class="user-role">Administrator</div>
+          </div>
+          <button class="logout-btn" id="logoutBtn" title="Logout">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══════════════════════════════════ MAIN ══ -->
+    <div class="main-wrapper">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div class="breadcrumb" id="breadcrumb">
+            <span class="breadcrumb-root">Admin</span>
+            <span class="breadcrumb-sep">›</span>
+            <span id="breadcrumbPage">Overview</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="admin-badge">⚙ Admin Panel</div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="content">
+        <!-- ══════════ SECTION: OVERVIEW ══════════ -->
+        <section class="section" id="section-overview">
+          <div class="section-title-row">
+            <h2 class="section-title">System Overview</h2>
+            <span class="section-sub">Real-time system statistics</span>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon stat-blue">👥</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statTotalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-green">📄</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statTotalFiles">0</div>
+                <div class="stat-label">Total Files</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-orange">💾</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statTotalStorage">0 MB</div>
+                <div class="stat-label">Storage Used</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-purple">🔗</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statTotalShared">0</div>
+                <div class="stat-label">Shared Files</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-red">🚫</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statBanned">0</div>
+                <div class="stat-label">Banned Users</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-teal">🕐</div>
+              <div class="stat-info">
+                <div class="stat-value" id="statActivity">0</div>
+                <div class="stat-label">Actions Today</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Preview -->
+          <div class="overview-grid">
+            <div class="overview-card">
+              <div class="overview-card-header">
+                <h3>Recent Users</h3>
+                <button class="link-btn" onclick="switchSection('users')">
+                  View all →
+                </button>
+              </div>
+              <div id="recentUsersList"></div>
+            </div>
+            <div class="overview-card">
+              <div class="overview-card-header">
+                <h3>Recent Activity</h3>
+                <button class="link-btn" onclick="switchSection('activity')">
+                  View all →
+                </button>
+              </div>
+              <div id="recentActivityList"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════════ SECTION: USERS ══════════ -->
+        <section class="section" id="section-users" style="display: none">
+          <div class="section-title-row">
+            <h2 class="section-title">User Management</h2>
+            <div class="section-actions">
+              <input
+                type="text"
+                class="search-input-sm"
+                id="userSearch"
+                placeholder="Search users..."
+              />
+              <select class="filter-select" id="userFilter">
+                <option value="all">All Users</option>
+                <option value="active">Active</option>
+                <option value="banned">Banned</option>
+                <option value="admin">Admins</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table" id="usersTable">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Files</th>
+                  <th>Storage</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ══════════ SECTION: ALL FILES ══════════ -->
+        <section class="section" id="section-files" style="display: none">
+          <div class="section-title-row">
+            <h2 class="section-title">All Files</h2>
+            <div class="section-actions">
+              <input
+                type="text"
+                class="search-input-sm"
+                id="fileSearch"
+                placeholder="Search files..."
+              />
+              <select class="filter-select" id="fileFilter">
+                <option value="all">All Types</option>
+                <option value="pdf">PDF</option>
+                <option value="image">Images</option>
+                <option value="doc">Documents</option>
+                <option value="code">Code</option>
+                <option value="zip">Archives</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table" id="filesTable">
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Owner</th>
+                  <th>Type</th>
+                  <th>Size</th>
+                  <th>Shared</th>
+                  <th>Uploaded</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="filesTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ══════════ SECTION: ACTIVITY LOG ══════════ -->
+        <section class="section" id="section-activity" style="display: none">
+          <div class="section-title-row">
+            <h2 class="section-title">Activity Log</h2>
+            <div class="section-actions">
+              <select class="filter-select" id="activityFilter">
+                <option value="all">All Actions</option>
+                <option value="login">Login</option>
+                <option value="upload">Upload</option>
+                <option value="download">Download</option>
+                <option value="delete">Delete</option>
+                <option value="share">Share</option>
+              </select>
+              <button class="btn-danger-sm" id="clearLogBtn">
+                🗑 Clear Log
+              </button>
+            </div>
+          </div>
+
+          <div class="activity-log" id="activityLog"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ══════════════════════════════════ USER DETAIL MODAL ══ -->
+    <div class="modal-overlay" id="userModal">
+      <div class="modal modal-md">
+        <div class="modal-header">
+          <h3 class="modal-title" id="userModalTitle">User Details</h3>
+          <button class="modal-close" id="userModalClose">✕</button>
+        </div>
+        <div class="modal-body" id="userModalBody"></div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="userModalCancel">Close</button>
+          <button class="btn-danger" id="userModalBan">Ban User</button>
+          <button class="btn-primary" id="userModalSave">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ CONFIRM MODAL ══ -->
+    <div class="modal-overlay" id="confirmModal">
+      <div class="modal modal-sm">
+        <div class="modal-header">
+          <h3 class="modal-title" id="confirmTitle">Confirm Action</h3>
+          <button class="modal-close" id="confirmModalClose">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="confirm-text" id="confirmText"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="confirmCancel">Cancel</button>
+          <button class="btn-danger" id="confirmOk">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin.js"></script>
+  </body>
+</html>
