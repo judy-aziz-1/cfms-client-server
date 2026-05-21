@@ -3,8 +3,6 @@
 //  Requires: auth.js (API_BASE, getToken, getUser, logout)
 // ════════════════════════════════════════════════════════════
 
-// NOTE: API_BASE is declared in auth.js — do NOT redeclare here
-
 // ── State ─────────────────────────────────────────────────────
 let currentSection  = 'overview';
 let allUsers        = [];
@@ -32,28 +30,31 @@ function initAdminInfo() {
 }
 
 // ════════════════════════════════════════════════════════════
-//  LOAD ALL DATA
+//  LOAD ALL DATA FROM API
 // ════════════════════════════════════════════════════════════
 async function loadAllData() {
-  // ── REAL API (uncomment when backend is ready) ────────────
-  // try {
-  //   const headers = { Authorization: `Bearer ${getToken()}` };
-  //   const [usersRes, filesRes, activityRes] = await Promise.all([
-  //     fetch(`${API_BASE}/admin/users`,    { headers }),
-  //     fetch(`${API_BASE}/admin/files`,    { headers }),
-  //     fetch(`${API_BASE}/admin/activity`, { headers })
-  //   ]);
-  //   allUsers    = await usersRes.json();
-  //   allFiles    = await filesRes.json();
-  //   allActivity = await activityRes.json();
-  // } catch (err) {
-  //   showToast('Failed to load data', 'error');
-  // }
-  // ─────────────────────────────────────────────────────────
+  try {
+    const headers = { Authorization: `Bearer ${getToken()}` };
+    const [usersRes, filesRes, activityRes] = await Promise.all([
+      fetch(`${API_BASE}/users/admin/users`,    { headers }),
+      fetch(`${API_BASE}/users/admin/files`,    { headers }),
+      fetch(`${API_BASE}/users/admin/activity`, { headers })
+    ]);
 
-  allUsers    = getMockUsers();
-  allFiles    = getMockFiles();
-  allActivity = getMockActivity();
+    if (!usersRes.ok || !filesRes.ok || !activityRes.ok) {
+      throw new Error('Failed to load admin data');
+    }
+
+    allUsers    = await usersRes.json();
+    allFiles    = await filesRes.json();
+    allActivity = await activityRes.json();
+
+  } catch (err) {
+    showToast('Failed to load data — check your connection', 'error');
+    allUsers    = [];
+    allFiles    = [];
+    allActivity = [];
+  }
 
   updateStats();
   renderOverview();
@@ -62,54 +63,18 @@ async function loadAllData() {
   renderActivityLog(allActivity);
 }
 
-// ── Mock Data ─────────────────────────────────────────────────
-function getMockUsers() {
-  return [
-    { id: 1, name: 'Admin User',   email: 'admin@cfms.com',   role: 'admin', status: 'active', files: 12, storage: 52428800,  joined: '2026-01-15' },
-    { id: 2, name: 'John Doe',     email: 'john@example.com',  role: 'user',  status: 'active', files: 8,  storage: 20971520,  joined: '2026-02-20' },
-    { id: 3, name: 'Sarah Smith',  email: 'sarah@example.com', role: 'user',  status: 'active', files: 25, storage: 104857600, joined: '2026-03-05' },
-    { id: 4, name: 'Mike Johnson', email: 'mike@example.com',  role: 'user',  status: 'banned', files: 3,  storage: 5242880,   joined: '2026-03-18' },
-    { id: 5, name: 'Emily Davis',  email: 'emily@example.com', role: 'user',  status: 'active', files: 17, storage: 73400320,  joined: '2026-04-01' },
-  ];
-}
-
-function getMockFiles() {
-  return [
-    { id: 1, name: 'Project Report.pdf', owner: 'John Doe',    type: 'pdf',   size: 2097152,  shared: true,  uploaded: '2026-04-28' },
-    { id: 2, name: 'design_mockup.png',  owner: 'Sarah Smith', type: 'image', size: 524288,   shared: false, uploaded: '2026-04-25' },
-    { id: 3, name: 'source_code.zip',    owner: 'Admin User',  type: 'zip',   size: 10485760, shared: true,  uploaded: '2026-04-20' },
-    { id: 4, name: 'Meeting Notes.docx', owner: 'Emily Davis', type: 'doc',   size: 45056,    shared: false, uploaded: '2026-05-01' },
-    { id: 5, name: 'database.sql',       owner: 'Admin User',  type: 'code',  size: 8192,     shared: false, uploaded: '2026-05-03' },
-    { id: 6, name: 'presentation.pptx', owner: 'John Doe',    type: 'doc',   size: 4194304,  shared: true,  uploaded: '2026-04-15' },
-    { id: 7, name: 'profile_photo.jpg',  owner: 'Sarah Smith', type: 'image', size: 1048576,  shared: false, uploaded: '2026-05-02' },
-    { id: 8, name: 'README.md',          owner: 'Admin User',  type: 'doc',   size: 4096,     shared: true,  uploaded: '2026-05-04' },
-  ];
-}
-
-function getMockActivity() {
-  return [
-    { id: 1,  action: 'upload',   user: 'John Doe',     detail: 'Uploaded Project Report.pdf',   time: '2026-05-05 09:14' },
-    { id: 2,  action: 'login',    user: 'Sarah Smith',  detail: 'Logged in from 192.168.1.5',    time: '2026-05-05 09:02' },
-    { id: 3,  action: 'download', user: 'Emily Davis',  detail: 'Downloaded source_code.zip',    time: '2026-05-05 08:55' },
-    { id: 4,  action: 'share',    user: 'Admin User',   detail: 'Shared README.md',              time: '2026-05-05 08:40' },
-    { id: 5,  action: 'delete',   user: 'Mike Johnson', detail: 'Deleted old_backup.zip',        time: '2026-05-04 17:22' },
-    { id: 6,  action: 'upload',   user: 'Sarah Smith',  detail: 'Uploaded design_mockup.png',    time: '2026-05-04 16:10' },
-    { id: 7,  action: 'login',    user: 'John Doe',     detail: 'Logged in from 10.0.0.4',       time: '2026-05-04 15:30' },
-    { id: 8,  action: 'download', user: 'Emily Davis',  detail: 'Downloaded Meeting Notes.docx', time: '2026-05-04 14:08' },
-    { id: 9,  action: 'share',    user: 'John Doe',     detail: 'Shared presentation.pptx',      time: '2026-05-04 13:45' },
-    { id: 10, action: 'upload',   user: 'Admin User',   detail: 'Uploaded database.sql',         time: '2026-05-04 11:20' },
-  ];
-}
-
 // ════════════════════════════════════════════════════════════
 //  STATS
 // ════════════════════════════════════════════════════════════
 function updateStats() {
-  const totalStorage = allUsers.reduce((s, u) => s + u.storage, 0);
-  const totalShared  = allFiles.filter(f => f.shared).length;
-  const banned       = allUsers.filter(u => u.status === 'banned').length;
+  const totalStorage = allUsers.reduce((s, u) => s + (u.storage || 0), 0);
+  const totalShared  = allFiles.filter(f => f.is_shared || f.shared).length;
+  const banned       = allUsers.filter(u => u.is_active === false).length;
   const todayStr     = new Date().toISOString().slice(0, 10);
-  const actToday     = allActivity.filter(a => a.time.startsWith(todayStr)).length;
+  const actToday     = allActivity.filter(a => {
+    const t = a.created_at || a.time || '';
+    return t.startsWith(todayStr);
+  }).length;
 
   animateCounter('statTotalUsers',  allUsers.length);
   animateCounter('statTotalFiles',  allFiles.length);
@@ -141,19 +106,19 @@ function renderOverview() {
       <div class="mini-avatar">${u.name.charAt(0)}</div>
       <div class="mini-info">
         <div class="mini-name">${escHtml(u.name)}</div>
-        <div class="mini-meta">${escHtml(u.email)} · ${u.files} files</div>
+        <div class="mini-meta">${escHtml(u.email)} · ${u.file_count || 0} files</div>
       </div>
-      <span class="badge badge-${u.status}">${u.status}</span>
-    </div>`).join('');
+      <span class="badge badge-${u.is_active ? 'active' : 'banned'}">${u.is_active ? 'active' : 'banned'}</span>
+    </div>`).join('') || '<div style="padding:16px;color:var(--muted);font-size:13px">No users yet</div>';
 
   document.getElementById('recentActivityList').innerHTML = allActivity.slice(0, 5).map(a => `
     <div class="activity-mini-row">
       <div class="activity-dot dot-${a.action}"></div>
       <div class="activity-mini-info">
         <div class="activity-mini-text">${escHtml(a.detail)}</div>
-        <div class="activity-mini-time">${escHtml(a.user)} · ${a.time}</div>
+        <div class="activity-mini-time">${a.created_at ? new Date(a.created_at).toLocaleString() : ''}</div>
       </div>
-    </div>`).join('');
+    </div>`).join('') || '<div style="padding:16px;color:var(--muted);font-size:13px">No activity yet</div>';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -175,15 +140,15 @@ function renderUsersTable(users) {
       </td>
       <td><span class="table-email">${escHtml(u.email)}</span></td>
       <td><span class="badge badge-${u.role}">${u.role}</span></td>
-      <td>${u.files}</td>
-      <td>${formatSize(u.storage)}</td>
-      <td>${formatDate(u.joined)}</td>
-      <td><span class="badge badge-${u.status}">${u.status}</span></td>
+      <td>${u.file_count || 0}</td>
+      <td>${formatSize(u.storage || 0)}</td>
+      <td>${formatDate(u.created_at)}</td>
+      <td><span class="badge badge-${u.is_active ? 'active' : 'banned'}">${u.is_active ? 'active' : 'banned'}</span></td>
       <td>
         <div class="table-actions">
           <button class="tbl-btn" onclick="openUserModal(${u.id})">View</button>
           <button class="tbl-btn tbl-btn-danger" onclick="confirmBanUser(${u.id})">
-            ${u.status === 'banned' ? 'Unban' : 'Ban'}
+            ${u.is_active ? 'Ban' : 'Unban'}
           </button>
         </div>
       </td>
@@ -203,15 +168,15 @@ function renderFilesTable(files) {
     <tr style="animation-delay:${i * 0.04}s">
       <td>
         <div class="file-cell">
-          <span class="file-cell-icon">${fileIcon(f.type)}</span>
+          <span class="file-cell-icon">${fileIcon(f.file_type || f.type)}</span>
           <span class="file-cell-name" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
         </div>
       </td>
-      <td>${escHtml(f.owner)}</td>
-      <td>${f.type.toUpperCase()}</td>
+      <td>${escHtml(f.owner || 'Unknown')}</td>
+      <td>${(f.file_type || f.type || '').toUpperCase()}</td>
       <td>${formatSize(f.size)}</td>
-      <td><span class="badge ${f.shared ? 'badge-shared' : 'badge-private'}">${f.shared ? 'Shared' : 'Private'}</span></td>
-      <td>${formatDate(f.uploaded)}</td>
+      <td><span class="badge ${(f.is_shared || f.shared) ? 'badge-shared' : 'badge-private'}">${(f.is_shared || f.shared) ? 'Shared' : 'Private'}</span></td>
+      <td>${formatDate(f.uploaded || f.created_at)}</td>
       <td>
         <div class="table-actions">
           <button class="tbl-btn tbl-btn-danger" onclick="confirmDeleteFile(${f.id})">Delete</button>
@@ -233,8 +198,8 @@ function renderActivityLog(activity) {
     <div class="log-row" style="animation-delay:${i * 0.03}s">
       <div class="log-dot dot-${a.action}"></div>
       <div class="log-text">${escHtml(a.detail)}</div>
-      <div class="log-user">${escHtml(a.user)}</div>
-      <div class="log-time">${a.time}</div>
+      <div class="log-user">User #${a.user_id}</div>
+      <div class="log-time">${a.created_at ? new Date(a.created_at).toLocaleString() : ''}</div>
     </div>`).join('');
 }
 
@@ -252,9 +217,7 @@ function initSidebar() {
 
   document.getElementById('menuToggle').addEventListener('click', () =>
     document.getElementById('sidebar').classList.toggle('open'));
-
   document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
-
   document.getElementById('logoutBtn').addEventListener('click', () => {
     if (typeof logout === 'function') logout();
     else window.location.replace('login.html');
@@ -306,7 +269,9 @@ function filterUsers() {
   const q      = document.getElementById('userSearch').value.toLowerCase().trim();
   const filter = document.getElementById('userFilter').value;
   let filtered = allUsers;
-  if (filter !== 'all') filtered = filtered.filter(u => u.status === filter || u.role === filter);
+  if (filter === 'active')  filtered = filtered.filter(u => u.is_active);
+  if (filter === 'banned')  filtered = filtered.filter(u => !u.is_active);
+  if (filter === 'admin')   filtered = filtered.filter(u => u.role === 'admin');
   if (q) filtered = filtered.filter(u =>
     u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
   renderUsersTable(filtered);
@@ -316,9 +281,9 @@ function filterFiles() {
   const q      = document.getElementById('fileSearch').value.toLowerCase().trim();
   const filter = document.getElementById('fileFilter').value;
   let filtered = allFiles;
-  if (filter !== 'all') filtered = filtered.filter(f => f.type === filter);
+  if (filter !== 'all') filtered = filtered.filter(f => (f.file_type || f.type) === filter);
   if (q) filtered = filtered.filter(f =>
-    f.name.toLowerCase().includes(q) || f.owner.toLowerCase().includes(q));
+    f.name.toLowerCase().includes(q) || (f.owner || '').toLowerCase().includes(q));
   renderFilesTable(filtered);
 }
 
@@ -341,19 +306,19 @@ function openUserModal(userId) {
     <div class="detail-grid">
       <div class="detail-item">
         <span class="detail-label">Status</span>
-        <span class="detail-value"><span class="badge badge-${selectedUser.status}">${selectedUser.status}</span></span>
+        <span class="detail-value"><span class="badge badge-${selectedUser.is_active ? 'active' : 'banned'}">${selectedUser.is_active ? 'active' : 'banned'}</span></span>
       </div>
       <div class="detail-item">
         <span class="detail-label">Joined</span>
-        <span class="detail-value">${formatDate(selectedUser.joined)}</span>
+        <span class="detail-value">${formatDate(selectedUser.created_at)}</span>
       </div>
       <div class="detail-item">
         <span class="detail-label">Total Files</span>
-        <span class="detail-value">${selectedUser.files} files</span>
+        <span class="detail-value">${selectedUser.file_count || 0} files</span>
       </div>
       <div class="detail-item">
         <span class="detail-label">Storage Used</span>
-        <span class="detail-value">${formatSize(selectedUser.storage)}</span>
+        <span class="detail-value">${formatSize(selectedUser.storage || 0)}</span>
       </div>
       <div class="detail-item" style="grid-column:1/-1">
         <span class="detail-label">Role</span>
@@ -365,7 +330,7 @@ function openUserModal(userId) {
     </div>`;
 
   document.getElementById('userModalBan').textContent =
-    selectedUser.status === 'banned' ? 'Unban User' : 'Ban User';
+    selectedUser.is_active ? 'Ban User' : 'Unban User';
 
   openModal('userModal');
 }
@@ -376,7 +341,7 @@ function openUserModal(userId) {
 function confirmBanUser(userId) {
   const user   = allUsers.find(u => u.id === userId);
   if (!user) return;
-  const action = user.status === 'banned' ? 'unban' : 'ban';
+  const action = user.is_active ? 'ban' : 'unban';
   confirmAction(
     `${action.charAt(0).toUpperCase() + action.slice(1)} ${user.name}?`,
     `Are you sure you want to ${action} this user?`,
@@ -384,18 +349,18 @@ function confirmBanUser(userId) {
   );
 }
 
-function toggleBanUser(userId) {
-  const user = allUsers.find(u => u.id === userId);
-  if (!user) return;
-
-  // fetch(`${API_BASE}/admin/users/${userId}/ban`, {
-  //   method:'POST', headers:{Authorization:`Bearer ${getToken()}`}
-  // }).then(() => loadAllData());
-
-  user.status = user.status === 'banned' ? 'active' : 'banned';
-  renderUsersTable(allUsers);
-  updateStats();
-  showToast(`User ${user.status === 'banned' ? 'banned' : 'unbanned'} successfully`, 'success');
+async function toggleBanUser(userId) {
+  try {
+    const res = await fetch(`${API_BASE}/users/admin/users/${userId}/ban`, {
+      method:  'POST',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error();
+    showToast('User updated successfully', 'success');
+    loadAllData();
+  } catch {
+    showToast('Action failed', 'error');
+  }
   closeModal('userModal');
 }
 
@@ -405,15 +370,18 @@ function confirmDeleteFile(fileId) {
   confirmAction(
     `Delete "${file.name}"?`,
     'This file will be permanently deleted and cannot be recovered.',
-    () => {
-      // fetch(`${API_BASE}/admin/files/${fileId}`, {
-      //   method:'DELETE', headers:{Authorization:`Bearer ${getToken()}`}
-      // }).then(() => loadAllData());
-
-      allFiles = allFiles.filter(f => f.id !== fileId);
-      renderFilesTable(allFiles);
-      updateStats();
-      showToast('File deleted', 'success');
+    async () => {
+      try {
+        const res = await fetch(`${API_BASE}/users/admin/files/${fileId}`, {
+          method:  'DELETE',
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        if (!res.ok) throw new Error();
+        showToast('File deleted', 'success');
+        loadAllData();
+      } catch {
+        showToast('Delete failed', 'error');
+      }
     }
   );
 }
@@ -429,18 +397,21 @@ function initModals() {
     if (selectedUser) confirmBanUser(selectedUser.id);
   });
 
-  document.getElementById('userModalSave').addEventListener('click', () => {
+  document.getElementById('userModalSave').addEventListener('click', async () => {
     if (!selectedUser) return;
     const newRole = document.getElementById('userRoleSelect').value;
-
-    // fetch(`${API_BASE}/admin/users/${selectedUser.id}`, {
-    //   method:'PATCH', headers:{'Content-Type':'application/json', Authorization:`Bearer ${getToken()}`},
-    //   body: JSON.stringify({ role: newRole })
-    // }).then(() => loadAllData());
-
-    selectedUser.role = newRole;
-    renderUsersTable(allUsers);
-    showToast('User updated successfully', 'success');
+    try {
+      const res = await fetch(`${API_BASE}/users/admin/users/${selectedUser.id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body:    JSON.stringify({ role: newRole })
+      });
+      if (!res.ok) throw new Error();
+      showToast('User updated successfully', 'success');
+      loadAllData();
+    } catch {
+      showToast('Update failed', 'error');
+    }
     closeModal('userModal');
   });
 

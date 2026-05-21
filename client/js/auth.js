@@ -32,7 +32,7 @@ function logout() {
   window.location.replace('login.html');
 }
 
-// ── Auth Guard (runs immediately on every page) ───────
+// ── Auth Guard ────────────────────────────────────────
 (function authGuard() {
   const path        = window.location.pathname;
   const isProtected = path.includes('dashboard.html') || path.includes('admin.html');
@@ -46,12 +46,12 @@ function logout() {
 })();
 
 // ════════════════════════════════════════════════════
-//  TAB SWITCHING — login page only
+//  TAB SWITCHING
 // ════════════════════════════════════════════════════
 function switchTab(tab) {
   const loginForm    = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
-  if (!loginForm || !registerForm) return; // guard: only runs on login page
+  if (!loginForm || !registerForm) return;
 
   const isLogin = tab === 'login';
   const tabs    = document.querySelectorAll('.tab');
@@ -116,7 +116,7 @@ function setLoading(buttonId, isLoading) {
 }
 
 // ════════════════════════════════════════════════════
-//  LOGIN — only runs if login form exists
+//  LOGIN
 // ════════════════════════════════════════════════════
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
@@ -136,31 +136,28 @@ if (loginForm) {
     setLoading('loginBtn', true);
 
     try {
-      // ── REAL API (uncomment when backend is ready) ──────
-      /*
       const response = await fetch(`${API_BASE}/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email, password })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || 'Login failed.');
-      saveSession(data.access_token, data.user);
-      window.location.replace('dashboard.html');
-      */
 
-      // ── MOCK ────────────────────────────────────────────
-      await new Promise(resolve => setTimeout(resolve, 1400));
-      if (email === 'admin@cfms.com' && password === '12345678') {
-        saveSession('mock-token-123', { name: 'Admin User', email, role: 'admin' });
-        showAlert('Login successful! Redirecting...', 'success');
-        setTimeout(() => window.location.replace('dashboard.html'), 1000);
-      } else {
-        throw new Error('Invalid email or password. Please try again.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Login failed. Please try again.');
       }
 
+      saveSession(data.access_token, data.user);
+      showAlert('Login successful! Redirecting...', 'success');
+      setTimeout(() => window.location.replace('dashboard.html'), 1000);
+
     } catch (error) {
-      showAlert(error.message);
+      if (error.name === 'TypeError') {
+        showAlert('Cannot connect to server. Make sure the backend is running.');
+      } else {
+        showAlert(error.message);
+      }
     } finally {
       setLoading('loginBtn', false);
     }
@@ -168,7 +165,7 @@ if (loginForm) {
 }
 
 // ════════════════════════════════════════════════════
-//  REGISTER — only runs if register form exists
+//  REGISTER
 // ════════════════════════════════════════════════════
 const registerForm = document.getElementById('registerForm');
 if (registerForm) {
@@ -192,26 +189,27 @@ if (registerForm) {
     setLoading('registerBtn', true);
 
     try {
-      // ── REAL API (uncomment when backend is ready) ──────
-      /*
       const response = await fetch(`${API_BASE}/auth/register`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ name, email, password })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || 'Registration failed.');
-      showAlert('Account created! You can now log in.', 'success');
-      setTimeout(() => switchTab('login'), 1500);
-      */
 
-      // ── MOCK ────────────────────────────────────────────
-      await new Promise(resolve => setTimeout(resolve, 1400));
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Registration failed. Please try again.');
+      }
+
       showAlert('Account created successfully! You can now log in.', 'success');
       setTimeout(() => switchTab('login'), 1500);
 
     } catch (error) {
-      showAlert(error.message);
+      if (error.name === 'TypeError') {
+        showAlert('Cannot connect to server. Make sure the backend is running.');
+      } else {
+        showAlert(error.message);
+      }
     } finally {
       setLoading('registerBtn', false);
     }

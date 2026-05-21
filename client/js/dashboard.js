@@ -3,8 +3,6 @@
 //  Requires: auth.js (API_BASE, getToken, getUser, logout)
 // ════════════════════════════════════════════════════════════
 
-// NOTE: API_BASE is declared in auth.js — do NOT redeclare here
-
 // ── State ─────────────────────────────────────────────────────
 let currentSection = 'my-files';
 let currentView    = 'grid';
@@ -25,7 +23,6 @@ const searchInput  = document.getElementById('searchInput');
 //  INIT
 // ════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // Auth guard is already handled by auth.js — no duplicate needed
   initUserInfo();
   loadFiles();
   initSidebar();
@@ -39,16 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── User Info ─────────────────────────────────────────────────
 function initUserInfo() {
   const user = typeof getUser === 'function' ? getUser() : null;
-
-  // ── REAL API (uncomment when backend is ready) ────────────
-  // fetch(`${API_BASE}/users/me`, {
-  //   headers: { Authorization: `Bearer ${getToken()}` }
-  // }).then(r => r.json()).then(user => setUserUI(user));
-  // ─────────────────────────────────────────────────────────
-
-  const mockUser = user || { name: 'Admin User', email: 'admin@cfms.com', role: 'admin' };
+  const mockUser = user || { name: 'User', email: '', role: 'user' };
   setUserUI(mockUser);
   showAdminLinkIfAdmin(mockUser);
+
+  // Refresh from API
+  fetch(`${API_BASE}/auth/me`, {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  })
+  .then(r => r.ok ? r.json() : null)
+  .then(u => { if (u) { setUserUI(u); showAdminLinkIfAdmin(u); } })
+  .catch(() => {});
 }
 
 function setUserUI(user) {
@@ -59,7 +57,6 @@ function setUserUI(user) {
   document.getElementById('userAvatar').textContent       = name.charAt(0).toUpperCase();
 }
 
-// Show Admin Panel link in sidebar only for admin users
 function showAdminLinkIfAdmin(user) {
   const adminLink = document.getElementById('adminLink');
   if (!adminLink) return;
@@ -71,37 +68,20 @@ function showAdminLinkIfAdmin(user) {
 //  FILE LOADING
 // ════════════════════════════════════════════════════════════
 async function loadFiles() {
-  // ── REAL API (uncomment when backend is ready) ────────────
-  // try {
-  //   const res = await fetch(`${API_BASE}/files/`, {
-  //     headers: { Authorization: `Bearer ${getToken()}` }
-  //   });
-  //   if (!res.ok) throw new Error('Failed to load files');
-  //   allFiles = await res.json();
-  //   updateStats(allFiles);
-  //   renderFiles(filterFiles(allFiles));
-  // } catch (err) {
-  //   showToast('Failed to load files', 'error');
-  // }
-  // ─────────────────────────────────────────────────────────
-
-  // MOCK DATA — remove when API is ready
-  allFiles = getMockFiles();
-  updateStats(allFiles);
-  renderFiles(filterFiles(allFiles));
-}
-
-function getMockFiles() {
-  return [
-    { id: 1, name: 'Project Report.pdf',  type: 'pdf',   size: 2048576,  modified: '2026-04-28', shared: true  },
-    { id: 2, name: 'design_mockup.png',   type: 'image', size: 512000,   modified: '2026-04-25', shared: false },
-    { id: 3, name: 'source_code.zip',     type: 'zip',   size: 10485760, modified: '2026-04-20', shared: true  },
-    { id: 4, name: 'Meeting Notes.docx',  type: 'doc',   size: 45056,    modified: '2026-05-01', shared: false },
-    { id: 5, name: 'database_schema.sql', type: 'code',  size: 8192,     modified: '2026-05-03', shared: false },
-    { id: 6, name: 'presentation.pptx',  type: 'ppt',   size: 4194304,  modified: '2026-04-15', shared: true  },
-    { id: 7, name: 'server_config.json', type: 'code',  size: 2048,     modified: '2026-05-04', shared: false },
-    { id: 8, name: 'README.md',          type: 'doc',   size: 4096,     modified: '2026-05-02', shared: false },
-  ];
+  try {
+    const res = await fetch(`${API_BASE}/files/`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error('Failed to load files');
+    allFiles = await res.json();
+    updateStats(allFiles);
+    renderFiles(filterFiles(allFiles));
+  } catch (err) {
+    showToast('Failed to load files', 'error');
+    allFiles = [];
+    updateStats([]);
+    renderFiles([]);
+  }
 }
 
 // ── Filter ────────────────────────────────────────────────────
@@ -109,8 +89,8 @@ function filterFiles(files) {
   const q = searchInput.value.toLowerCase().trim();
   let filtered = files;
 
-  if (currentSection === 'shared')  filtered = files.filter(f => f.shared);
-  if (currentSection === 'recent')  filtered = files.filter(f => isRecent(f.modified));
+  if (currentSection === 'shared')  filtered = files.filter(f => f.is_shared);
+  if (currentSection === 'recent')  filtered = files.filter(f => isRecent(f.created_at));
   if (currentSection === 'starred') filtered = files.filter(f => f.starred);
   if (currentSection === 'trash')   filtered = files.filter(f => f.deleted);
 
@@ -128,8 +108,8 @@ function sortFiles(files) {
   return [...files].sort((a, b) => {
     if (currentSort === 'name') return a.name.localeCompare(b.name);
     if (currentSort === 'size') return b.size - a.size;
-    if (currentSort === 'date') return new Date(b.modified) - new Date(a.modified);
-    if (currentSort === 'type') return a.type.localeCompare(b.type);
+    if (currentSort === 'date') return new Date(b.created_at) - new Date(a.created_at);
+    if (currentSort === 'type') return a.file_type.localeCompare(b.file_type);
     return 0;
   });
 }
@@ -139,8 +119,8 @@ function sortFiles(files) {
 // ════════════════════════════════════════════════════════════
 function updateStats(files) {
   const totalSize = files.reduce((s, f) => s + f.size, 0);
-  const sharedCnt = files.filter(f => f.shared).length;
-  const recentCnt = files.filter(f => isRecent(f.modified)).length;
+  const sharedCnt = files.filter(f => f.is_shared).length;
+  const recentCnt = files.filter(f => isRecent(f.created_at)).length;
 
   animateCounter('statFiles',  files.length);
   animateCounter('statShared', sharedCnt);
@@ -185,11 +165,11 @@ function renderGrid(files) {
        <button class="file-card-options"
                onclick="event.stopPropagation();openFileOptions(${f.id})"
                title="Options">⋯</button>
-       <div class="file-card-icon">${fileIcon(f.type)}</div>
+       <div class="file-card-icon">${fileIcon(f.file_type)}</div>
        <div class="file-card-name" title="${escHtml(f.name)}">${escHtml(f.name)}</div>
        <div class="file-card-meta">
          <span>${formatSize(f.size)}</span>
-         <span>${formatDate(f.modified)}</span>
+         <span>${formatDate(f.created_at)}</span>
        </div>
      </div>`
   ).join('');
@@ -199,12 +179,12 @@ function renderList(files) {
   fileListBody.innerHTML = files.map((f, i) =>
     `<div class="list-row" style="animation-delay:${i * 0.03}s">
        <div class="list-file-name">
-         <span class="list-file-icon">${fileIcon(f.type)}</span>
+         <span class="list-file-icon">${fileIcon(f.file_type)}</span>
          <span class="list-file-label" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
-         ${f.shared ? '<span style="font-size:10px;color:var(--accent);margin-left:6px">SHARED</span>' : ''}
+         ${f.is_shared ? '<span style="font-size:10px;color:var(--accent);margin-left:6px">SHARED</span>' : ''}
        </div>
        <span class="list-col-size">${formatSize(f.size)}</span>
-       <span class="list-col-date">${formatDate(f.modified)}</span>
+       <span class="list-col-date">${formatDate(f.created_at)}</span>
        <button class="list-row-options" onclick="openFileOptions(${f.id})" title="Options">⋯</button>
      </div>`
   ).join('');
@@ -294,21 +274,27 @@ function initUploadModal() {
   const fileInput  = document.getElementById('fileInput');
   const queue      = document.getElementById('uploadQueue');
 
+  let pendingFiles = [];
+
   uploadBtn.addEventListener('click',  () => openModal('uploadModal'));
-  closeBtn.addEventListener('click',   () => closeModal('uploadModal'));
-  cancelBtn.addEventListener('click',  () => closeModal('uploadModal'));
-  confirmBtn.addEventListener('click', () => uploadAllFiles(queue));
+  closeBtn.addEventListener('click',   () => { closeModal('uploadModal'); queue.innerHTML = ''; pendingFiles.splice(0); });
+  cancelBtn.addEventListener('click',  () => { closeModal('uploadModal'); queue.innerHTML = ''; pendingFiles.splice(0); });
+  confirmBtn.addEventListener('click', () => uploadAllFiles(queue, pendingFiles));
 
   dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
   dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
   dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
-    addFilesToQueue(Array.from(e.dataTransfer.files), queue);
+    const files = Array.from(e.dataTransfer.files);
+    pendingFiles.push(...files);
+    addFilesToQueue(files, queue);
   });
   dropZone.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', () => {
-    addFilesToQueue(Array.from(fileInput.files), queue);
+    const files = Array.from(fileInput.files);
+    pendingFiles.push(...files);
+    addFilesToQueue(files, queue);
     fileInput.value = '';
   });
 }
@@ -328,38 +314,35 @@ function addFilesToQueue(files, queue) {
   });
 }
 
-async function uploadAllFiles(queue) {
-  const bars = queue.querySelectorAll('[data-bar]');
-  if (bars.length === 0) { showToast('No files selected', 'error'); return; }
+async function uploadAllFiles(queue, pendingFiles) {
+  if (!pendingFiles.length) { showToast('No files selected', 'error'); return; }
 
-  // ── REAL API (uncomment when backend is ready) ────────────
-  // const formData = new FormData();
-  // for (const file of pendingFiles) { formData.append('files', file); }
-  // const res = await fetch(`${API_BASE}/files/upload`, {
-  //   method: 'POST',
-  //   headers: { Authorization: `Bearer ${getToken()}` },
-  //   body: formData
-  // });
-  // if (res.ok) { showToast('Files uploaded!', 'success'); loadFiles(); }
-  // ─────────────────────────────────────────────────────────
+  const formData = new FormData();
+  pendingFiles.forEach(file => formData.append('files', file));
 
-  // MOCK
-  for (const bar of bars) await animateBar(bar);
-  showToast(`${bars.length} file(s) uploaded`, 'success');
-  closeModal('uploadModal');
-  queue.innerHTML = '';
-  loadFiles();
-}
+  try {
+    const bars = queue.querySelectorAll('[data-bar]');
+    // Animate bars while uploading
+    bars.forEach(bar => { bar.style.width = '60%'; });
 
-function animateBar(bar) {
-  return new Promise(resolve => {
-    let w = 0;
-    const t = setInterval(() => {
-      w = Math.min(w + Math.random() * 15 + 5, 100);
-      bar.style.width = w + '%';
-      if (w >= 100) { clearInterval(t); resolve(); }
-    }, 80);
-  });
+    const res = await fetch(`${API_BASE}/files/upload`, {
+      method:  'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body:    formData
+    });
+
+    if (!res.ok) throw new Error('Upload failed');
+
+    bars.forEach(bar => { bar.style.width = '100%'; });
+    showToast(`${pendingFiles.length} file(s) uploaded`, 'success');
+    closeModal('uploadModal');
+    queue.innerHTML = '';
+    pendingFiles.splice(0);
+    loadFiles(); // refresh file list
+
+  } catch (err) {
+    showToast('Upload failed. Try again.', 'error');
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -380,52 +363,83 @@ function openFileOptions(fileId) {
   openModal('fileModal');
 }
 
-function handleDownload() {
-  // window.open(`${API_BASE}/files/${selectedFile.id}/download?token=${getToken()}`);
-  showToast(`Downloading: ${selectedFile.name}`, 'success');
+async function handleDownload() {
+  try {
+    const res = await fetch(`${API_BASE}/files/${selectedFile.id}/download`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = selectedFile.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Downloading: ${selectedFile.name}`, 'success');
+  } catch {
+    showToast('Download failed', 'error');
+  }
   closeModal('fileModal');
 }
 
-function handleShare() {
-  // fetch(`${API_BASE}/files/${selectedFile.id}/share`, { method:'POST', headers:{Authorization:`Bearer ${getToken()}`} })
-  //   .then(r => r.json()).then(data => { navigator.clipboard.writeText(data.link); showToast('Share link copied!','success'); });
-  navigator.clipboard?.writeText(`http://localhost:8000/share/${selectedFile.id}`)
-    .then(() => showToast('Share link copied!', 'success'))
-    .catch(()  => showToast('Share link generated', 'success'));
+async function handleShare() {
+  try {
+    const res = await fetch(`${API_BASE}/files/${selectedFile.id}/share`, {
+      method:  'POST',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    const data = await res.json();
+    navigator.clipboard?.writeText(data.share_link)
+      .then(() => showToast('Share link copied!', 'success'))
+      .catch(()  => showToast(`Share link: ${data.share_link}`, 'success'));
+  } catch {
+    showToast('Failed to generate share link', 'error');
+  }
   closeModal('fileModal');
 }
 
-function handleRename() {
+async function handleRename() {
   const newName = prompt('Enter new name:', selectedFile.name);
   if (!newName || newName === selectedFile.name) return;
 
-  // fetch(`${API_BASE}/files/${selectedFile.id}`, {
-  //   method:'PATCH', headers:{'Content-Type':'application/json', Authorization:`Bearer ${getToken()}`},
-  //   body: JSON.stringify({ name: newName })
-  // }).then(() => loadFiles());
-
-  selectedFile.name = newName;
-  renderFiles(filterFiles(allFiles));
-  showToast('File renamed', 'success');
+  try {
+    const res = await fetch(`${API_BASE}/files/${selectedFile.id}`, {
+      method:  'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization:  `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ name: newName })
+    });
+    if (!res.ok) throw new Error();
+    showToast('File renamed', 'success');
+    loadFiles();
+  } catch {
+    showToast('Rename failed', 'error');
+  }
   closeModal('fileModal');
 }
 
-function handleDelete() {
+async function handleDelete() {
   if (!confirm(`Delete "${selectedFile.name}"?`)) return;
 
-  // fetch(`${API_BASE}/files/${selectedFile.id}`, {
-  //   method:'DELETE', headers:{Authorization:`Bearer ${getToken()}`}
-  // }).then(() => loadFiles());
-
-  allFiles = allFiles.filter(f => f.id !== selectedFile.id);
-  updateStats(allFiles);
-  renderFiles(filterFiles(allFiles));
-  showToast('File deleted', 'success');
+  try {
+    const res = await fetch(`${API_BASE}/files/${selectedFile.id}`, {
+      method:  'DELETE',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error();
+    showToast('File deleted', 'success');
+    loadFiles();
+  } catch {
+    showToast('Delete failed', 'error');
+  }
   closeModal('fileModal');
 }
 
 // ════════════════════════════════════════════════════════════
-//  NEW FOLDER MODAL
+//  NEW FOLDER MODAL (UI only — backend folders coming later)
 // ════════════════════════════════════════════════════════════
 function initFolderModal() {
   document.getElementById('folderModalClose').addEventListener('click', () => closeModal('folderModal'));
@@ -440,19 +454,6 @@ function createFolder() {
   const input = document.getElementById('folderNameInput');
   const name  = input.value.trim();
   if (!name) { input.focus(); return; }
-
-  // fetch(`${API_BASE}/folders/`, {
-  //   method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${getToken()}`},
-  //   body: JSON.stringify({ name })
-  // }).then(() => loadFiles());
-
-  const newFolder = {
-    id: Date.now(), name, type: 'folder',
-    size: 0, modified: new Date().toISOString().slice(0, 10), shared: false
-  };
-  allFiles.unshift(newFolder);
-  updateStats(allFiles);
-  renderFiles(filterFiles(allFiles));
   showToast(`Folder "${name}" created`, 'success');
   input.value = '';
   closeModal('folderModal');
