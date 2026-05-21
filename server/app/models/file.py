@@ -15,3 +15,4 @@ class File(Base):
     folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    share_token = Column(String(255), unique=True, nullable=True)

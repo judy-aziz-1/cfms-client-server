@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File as FastAPIFile
+from fastapi import APIRouter, Depends, HTTPException, status,UploadFile, File as FastAPIFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -8,6 +8,9 @@ from app.schemas.schemas import FileRead
 from typing import List
 import os
 import shutil
+from sqlalchemy.orm import Session
+# 👇 الخطوة 1: استيراد الدوال الأمنية في ملف security.py
+from utils.security import sanitize_filename, generate_share_token
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
@@ -18,34 +21,59 @@ STORAGE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "storage")
 # ───────────────────────────────
 # رفع ملف
 # ───────────────────────────────
+
+router = APIRouter()
+# حد الحجم الأقصى المسموح به: 50 ميغابايت تحول إلى بايتس (50 * 1024 * 1024)
+MAX_FILE_SIZE = 52428800 
+
 @router.post("/upload")
-def upload_file(
+async def upload_file(
     file: UploadFile,
     owner_id: int,
     folder_id: int = None,
     db: Session = Depends(get_db)
 ):
+    # 👇 الإجراء الأمني الأول: التحقق من حجم الملف (File Size Limit) قبل المعالجة
+    # نقرأ المحتوى لمعرفة حجمه الفعلي برمجياً
+    content = await file.read()
+    file_size = len(content)
+    
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="حجم الملف كبير جداً! الحد الأقصى المسموح به هو 50 ميغابايت."
+        )
+    
+    # إعادة مؤشر القراءة للبداية حتى نتمكن من نسخ الملف للقرص بنجاح
+    await file.seek(0)
+
     # تأكد أن مجلد storage موجود
     os.makedirs(STORAGE_PATH, exist_ok=True)
 
-    # مسار حفظ الملف
-    file_path = os.path.join(STORAGE_PATH, file.filename)
+    # 👇 الإجراء الأمني الثاني: تنظيف اسم الملف (Directory Traversal Protection)
+    safe_filename = sanitize_filename(file.filename)
+
+    # مسار حفظ الملف الآمن على القرص باستخدام الاسم المنظف
+    file_path = os.path.join(STORAGE_PATH, safe_filename)
 
     # احفظ الملف على القرص
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # احفظ معلومات الملف في قاعدة البيانات
-    file_size = os.path.getsize(file_path)
     file_type = file.content_type or "unknown"
 
+    # 👇 الإجراء الأمني الثالث: توليد رمز مشاركة فريد وآمن (Share Token) لكل ملف مرفوع
+    unique_share_token = generate_share_token()
+
+    # احفظ معلومات الملف في قاعدة البيانات مع التعديلات الأمنية
     new_file = File(
-        name=file.filename,
+        name=safe_filename,         # استخدام الاسم المنظف
         path=file_path,
-        size=file_size,
+        size=file_size,             # الحجم الدقيق الذي تم فحصه
         type=file_type,
         owner_id=owner_id,
-        folder_id=folder_id
+        folder_id=folder_id,
+        share_token=unique_share_token # إضافة الرمز الفريد الخاص بقسمكِ لجدول قاعدة البيانات
     )
     db.add(new_file)
 

@@ -217,3 +217,19 @@ if (registerForm) {
     }
   });
 }
+// XSS prevention function in the front end (escHtml) used on page 9 of the documentation
+function escHtml(text) {
+    if (!text) return "";
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        "/": '&#x2F;'
+    };
+    return text.replace(/[&<>"'/]/g, function(m) { return map[m]; });
+}
+
+// Example of safe usage when displaying the file name on the Dashboard:
+// element.innerHTML = `<span>${escHtml(file.name)}</span>`;
